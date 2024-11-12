@@ -1,0 +1,85 @@
+# Virtual Environment
+venv/
+env/
+*.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyCharm files
+.idea/
+
+# VS Code files
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# U-2-Net model file (large binary file)
+U-2-Net/saved_models/u2net/u2net.pth
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Logs
+*.log
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+
+# Pyre type checker
+.pyre/
+
+# Output images
+output.png
