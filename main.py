@@ -20,7 +20,31 @@ app = FastAPI()
 # Load the U-2-Net model
 model_dir = './U-2-Net/saved_models/u2net/u2net.pth'
 model = U2NET(3, 1)
-model.load_state_dict(torch.load(model_dir, map_location=torch.device('cpu')))
+
+def load_model(model_path):
+    try:
+        # Try loading with map_location first
+        state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+    except _pickle.UnpicklingError:
+        # If that fails, try loading with 'latin1' encoding
+        with open(model_path, 'rb') as f:
+            state_dict = torch.load(f, map_location=torch.device('cpu'), encoding='latin1')
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return None
+
+    try:
+        model.load_state_dict(state_dict)
+        print("Model loaded successfully")
+        return model
+    except Exception as e:
+        print(f"Error loading state dict: {e}")
+        return None
+
+model = load_model(model_dir)
+if model is None:
+    raise RuntimeError("Failed to load the model. Please check the model file and try again.")
+
 model.eval()
 
 def remove_background(input_image):
