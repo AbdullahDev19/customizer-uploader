@@ -2,7 +2,7 @@ import io
 import sys
 import os
 import numpy as np
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 from PIL import Image
 import torch
@@ -19,12 +19,19 @@ app = FastAPI()
 
 # Load the U-2-Net model
 model_dir = './U-2-Net/saved_models/u2net/u2net.pth'
-model = U2NET(3, 1)
-if torch.cuda.is_available():
-    model = model.cuda()
-    model.load_state_dict(torch.load(model_dir))
-else:
-    model.load_state_dict(torch.load(model_dir, map_location='cpu'))
+
+def load_model(model_path):
+    model = U2NET(3, 1)
+    try:
+        state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+        model.load_state_dict(state_dict)
+        print("Model loaded successfully")
+    except Exception as e:
+        print(f"Error loading model: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load the model")
+    return model
+
+model = load_model(model_dir)
 model.eval()
 
 def remove_background(input_image):
@@ -35,14 +42,11 @@ def remove_background(input_image):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     image = transform(input_image).unsqueeze(0)
-    
-    if torch.cuda.is_available():
-        image = image.cuda()
 
     # Predict the mask
     with torch.no_grad():
         output = model(image)
-        pred = output[0].squeeze().cpu().numpy()
+        pred = output[0].squeeze().numpy()
 
     # Post-process the mask
     ma = np.max(pred)
@@ -59,16 +63,19 @@ def remove_background(input_image):
 
 @app.post("/remove-bg")
 async def remove_background_api(file: UploadFile = File(...)):
-    contents = await file.read()
-    input_image = Image.open(io.BytesIO(contents)).convert("RGB")
-    
-    output_image = remove_background(input_image)
-    
-    img_byte_arr = io.BytesIO()
-    output_image.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-    
-    return StreamingResponse(img_byte_arr, media_type="image/png")
+    try:
+        contents = await file.read()
+        input_image = Image.open(io.BytesIO(contents)).convert("RGB")
+        
+        output_image = remove_background(input_image)
+        
+        img_byte_arr = io.BytesIO()
+        output_image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        
+        return StreamingResponse(img_byte_arr, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
