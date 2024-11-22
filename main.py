@@ -22,11 +22,15 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 @app.post("/remove-bg")
 async def remove_background_api(file: UploadFile = File(...)):
     # Check file size
-    contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    
+    if file_size > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail=f"File size exceeds the limit of {MAX_FILE_SIZE / (1024 * 1024):.2f} MB")
     
     try:
+        contents = await file.read()
         input_image = Image.open(io.BytesIO(contents)).convert("RGB")
         
         # Remove background
@@ -43,4 +47,4 @@ async def remove_background_api(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=1000, limit_max_requests=10000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
