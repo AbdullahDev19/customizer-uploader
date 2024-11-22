@@ -1,6 +1,7 @@
 import io
 import sys
 import os
+import pickle
 import numpy as np
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
@@ -25,7 +26,7 @@ def load_model(model_path):
     try:
         # Try loading with map_location first
         state_dict = torch.load(model_path, map_location=torch.device('cpu'))
-    except _pickle.UnpicklingError:
+    except pickle.UnpicklingError:
         # If that fails, try loading with 'latin1' encoding
         with open(model_path, 'rb') as f:
             state_dict = torch.load(f, map_location=torch.device('cpu'), encoding='latin1')
